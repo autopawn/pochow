@@ -8,6 +8,7 @@ from mpl_toolkits.mplot3d import Axes3D
 import cv2
 from cv2.saliency import StaticSaliencyFineGrained_create
 
+# Evaluate an image on the given coordinates (appyling interpolation)
 def evaluate_on_coords(img,xs,ys,interp=True):
     if not interp:
         xs_round = (np.round(xs)).astype(np.int)
@@ -39,7 +40,7 @@ def evaluate_on_coords(img,xs,ys,interp=True):
         fimg = fimg.astype(np.uint8)
         return fimg
 
-
+# Uses the heat equation to diffuse the saliency evenly in the image
 def blur_with_heat_equation(u,x,y,tmax=400,pixres=5000):
     uu = u.astype(np.float)+0.01
     yy = uu*y  # y-isity
@@ -118,6 +119,9 @@ ap.add_argument("-i","--input", required=True, help="path to input image")
 ap.add_argument("-o","--output", required=True, help="path to output image")
 ap.add_argument('-s',"--spectral", action='store_true',help="Use spectral residual for saliency.")
 ap.add_argument('-p',"--plot", action='store_true',help="Plot results.")
+ap.add_argument('-p2',"--plot2", action='store_true',help="Plot results with extra details.")
+ap.add_argument('-t',"--time", type=int, default=400, help='Difussion time')
+
 args = vars(ap.parse_args())
 
 # Load the input image
@@ -137,7 +141,7 @@ else:
 # Blur saliency along with x-isity and y-isity
 
 xx,yy = np.meshgrid(np.arange(ss.shape[1]),np.arange(ss.shape[0]))
-(ssf,xxf,yyf) = blur_with_heat_equation(ss,xx,yy)
+(ssf,xxf,yyf) = blur_with_heat_equation(ss,xx,yy,tmax=args["time"])
 
 # Evaluate image on the resulting coordinates
 imagef = evaluate_on_coords(image,xxf,yyf)
@@ -146,29 +150,37 @@ imagef = evaluate_on_coords(image,xxf,yyf)
 cv2.imwrite(args["output"],imagef)
 
 # Plot if required:
-if args["plot"]:
-    fig, axs = plt.subplots(2,2,sharex=True,sharey=True)
+if args["plot"] or args["plot2"]:
+    n_cols = 4 if args["plot2"] else 2
+
+    fig, axs = plt.subplots(2,n_cols,sharex=True,sharey=True)
 
     fig.suptitle('Content-aware scaling: '+args["input"])
 
-    axs[0,0].set_adjustable('box-forced')
-    axs[0,1].set_adjustable('box-forced')
-    axs[1,0].set_adjustable('box-forced')
-    axs[1,1].set_adjustable('box-forced')
+    axs[0,0].set_title("Input image")
+    axs[0,0].imshow(cv2.cvtColor(image,cv2.COLOR_BGR2RGB))
 
-    axs[0,0].set_title("Initial saliency (%s)"%saliency_method)
-    axs[0,0].imshow(ss)
+    axs[0,1].set_title("Initial saliency $U$ (%s)"%saliency_method)
+    axs[0,1].imshow(ss,vmin=0)
 
-    axs[0,1].set_title("Input image")
-    axs[0,1].imshow(cv2.cvtColor(image,cv2.COLOR_BGR2RGB))
+    axs[1,0].set_title("Output image")
+    axs[1,0].imshow(cv2.cvtColor(imagef,cv2.COLOR_BGR2RGB))
 
-    axs[1,0].set_title("Final saliency")
-    axs[1,0].imshow(ssf,vmin=np.min(ss),vmax=np.max(ss))
+    axs[1,1].set_title("Saliency $U$ at $t=%d$"%args["time"])
+    axs[1,1].imshow(ssf,vmin=0,vmax=np.max(ss))
 
-    axs[1,1].set_title("Output image")
-    axs[1,1].imshow(cv2.cvtColor(imagef,cv2.COLOR_BGR2RGB))
+    if args["plot2"]:
+        axs[0,2].set_title("Initial $\\frac{\hat{X}}{U}$")
+        axs[0,2].imshow(xx)
 
+        axs[0,3].set_title("Initial $\\frac{\hat{Y}}{U}$")
+        axs[0,3].imshow(yy)
 
-    fig.tight_layout()
+        axs[1,2].set_title("$\\frac{\hat{X}}{U}$ at $t=%d$"%args["time"])
+        axs[1,2].imshow(xxf)
+
+        axs[1,3].set_title("$\\frac{\hat{Y}}{U}$ at $t=%d$"%args["time"])
+        axs[1,3].imshow(yyf)
+
     plt.show()
 

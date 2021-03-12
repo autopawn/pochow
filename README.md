@@ -9,7 +9,8 @@ python3 pochow.py [-h] -i INPUT -o OUTPUT [-s] [-p]
 
 Example:
 ```bash
-python3 pochow.py -i imgs/harold_input.jpeg -o result.png
+python3 pochow.py -i docs/harold_input.jpeg -o result.png
 ```
 
-![Plot of the results using harold_input.jpeg](imgs/harold_plot.png)
+![Plot of the results using harold_input.jpeg](docs/harold_plot.png)
+
