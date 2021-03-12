@@ -16,7 +16,7 @@ U(x,y,0) = \text{Saliency}(M)(x,y) + \varepsilon
 $$
 where $\varepsilon$ is a relatively small constant that can be added so low information areas of the image are not totally ignored.
 
-For calculating the saliency, different methods can be used, see for instance [the ones provided by OpenCV](https://towardsdatascience.com/opencv-static-saliency-detection-in-a-nutshell-404d4c58fee4).
+For calculating the saliency, different methods can be used, see for instance the ones provided by OpenCV \footnote{\url{https://towardsdatascience.com/opencv-static-saliency-detection-in-a-nutshell-404d4c58fee4}}.
 
 The X-osity $\hat{X}$, with initial condition in $t{=}0$:
 $$
@@ -34,7 +34,7 @@ The saliency is diffused using the heat equation:
 $$
 \frac{\delta U}{\delta t} = \alpha \left(\frac{\delta^2 U}{\delta x^2} + \frac{\delta^2 U}{\delta y^2} \right)
 $$
-with [Neumann boundary conditions](https://en.wikipedia.org/wiki/Neumann_boundary_condition#PDE).
+with Neumann boundary conditions \footnote{\url{https://en.wikipedia.org/wiki/Neumann\_boundary\_condition\#PDE}}.
 
 The functions are discretized in a finite grid. A small variation of finite differences is used:
 
