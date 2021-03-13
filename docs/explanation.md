@@ -2,7 +2,7 @@
 
 ## Functions
 
-The method receives an image $M$ as input, which in this explanation we will asssume to be stretched to fill the $[0,1] \times [0,1]$ domain.
+The method receives an image $M$ as input, which in this explanation we will assume to be stretched to fill the $[0,1] \times [0,1]$ domain.
 
 The method works using 3 functions:
 $$
@@ -28,19 +28,19 @@ $$
 \hat{Y}(x,y,0) = y \, U(x,y,0)
 $$
 
-## Difussion
+## Diffusion
 
 The saliency is diffused using the heat equation:
 $$
-\frac{\delta U}{\delta t} = \alpha \left(\frac{\delta^2 U}{\delta x^2} + \frac{\delta^2 U}{\delta y^2} \right)
+\frac{\delta U}{\delta t} = \left(\frac{\delta^2 U}{\delta x^2} + \frac{\delta^2 U}{\delta y^2} \right)
 $$
 with Neumann boundary conditions \footnote{\url{https://en.wikipedia.org/wiki/Neumann\_boundary\_condition\#PDE}}.
 
-The functions are discretized in a finite grid. A small variation of finite differences is used:
+The functions are discretized in a finite grid. A slight variation of finite differences is used:
 
 On each time step $t$, the amount of saliency $\Delta U_{i \rightarrow j, t}$ transferred from a cell $i$ to another cell $j$ is given by:
 $$
-\Delta U_{i \rightarrow j,t} = \alpha \max(U_{i,t} - U_{j,t},0) \, U_{i,t}
+\Delta U_{i \rightarrow j,t} = \Delta t \, \max(U_{i,t} - U_{j,t},0)
 $$
 So, the saliency of cell $i$ in the next step is given by:
 
@@ -54,7 +54,7 @@ U_{i,(t+1)} &= U_{i,t} +
 where $a,b,c,d$ are the cells adjacent to $i$ in the grid.
 
 
-Smaller values of $\alpha$ make the simmulation more stable and precise, but slower.
+Smaller time steps $\Delta t$ make the simulation more stable and precise, but slower.
 
 Each time an amount of saliency $\Delta U_{i\rightarrow j,t}$ is transferred from a cell $i$ to another cell $j$, a proportional amount of the X-osity and Y-osity are transferred along with it:
 $$
@@ -62,11 +62,11 @@ $$
 $$
 
 $$
-\Delta \hat{Y}_{i \rightarrow j} = \frac{\Delta U_{i \rightarrow j}}{U_{i}} \hat{Y}_i
+\Delta \hat{Y}_{i \rightarrow j,t} = \frac{\Delta U_{i \rightarrow j}}{U_{i,t}} \hat{Y}_i
 $$
-$\hat{X}_{i,(t+1)}$ and $\hat{Y}_{i,(t+1)}$ are obtained analogously to $U_{i,(t+1)}$
+$\hat{X}_{i,(t+1)}$ and $\hat{Y}_{i,(t+1)}$ are obtained analogously to how $U_{i,(t+1)}$ is.
 
-Once enough iterations are performed, the saliency  is expected to be appoximately constant:
+Once enough iterations are performed, the saliency  is expected to be approximately constant:
 $$
 \lim_{t \rightarrow \infty} U(x,y,t) = C \qquad \text{, with $C$ constant.}
 $$

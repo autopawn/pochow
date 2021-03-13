@@ -8,7 +8,7 @@ from mpl_toolkits.mplot3d import Axes3D
 import cv2
 from cv2.saliency import StaticSaliencyFineGrained_create
 
-# Evaluate an image on the given coordinates (appyling interpolation)
+# Evaluate an image on the given coordinates (appyling interpolation if required)
 def evaluate_on_coords(img,xs,ys,interp=True):
     if not interp:
         xs_round = (np.round(xs)).astype(np.int)
@@ -55,6 +55,7 @@ def blur_with_heat_equation(u,x,y,tmax=400,pixres=5000):
     yy = cv2.resize(yy, dsize=(nsx,nsy), interpolation=cv2.INTER_CUBIC)
     xx = cv2.resize(xx, dsize=(nsx,nsy), interpolation=cv2.INTER_CUBIC)
 
+    # Time delta used
     factor = 0.2
 
     t = 0
@@ -62,50 +63,61 @@ def blur_with_heat_equation(u,x,y,tmax=400,pixres=5000):
 
         step = min(tmax-t,factor)
 
+        # The difference of saliency between vertically adjacent cells
         u_y = uu[:-1,:] - uu[1:,:]
+        # The difference of saliency between horizontally adjacent cells
         u_x = uu[:,:-1] - uu[:,1:]
 
+        # The amount of saliency transferred on each direction (S,N,E,W)
         trasnf_u_s = +np.maximum(u_y,0)*step
         trasnf_u_n = -np.minimum(u_y,0)*step
         trasnf_u_e = +np.maximum(u_x,0)*step
         trasnf_u_w = -np.minimum(u_x,0)*step
 
+        # The proportion of salience transferred on each direction (S,N,E,W)
         trasnf_prop_s = trasnf_u_s / uu[:-1,:]
         trasnf_prop_n = trasnf_u_n / uu[1:,:]
         trasnf_prop_e = trasnf_u_e / uu[:,:-1]
         trasnf_prop_w = trasnf_u_w / uu[:,1:]
 
+        # The x-osity transferred on each direction (S,N,E,W)
         trasnf_x_s = trasnf_prop_s * xx[:-1,:]
         trasnf_x_n = trasnf_prop_n * xx[1:,:]
         trasnf_x_e = trasnf_prop_e * xx[:,:-1]
         trasnf_x_w = trasnf_prop_w * xx[:,1:]
 
+        # The y-osity transferred on each direction (S,N,E,W)
         trasnf_y_s = trasnf_prop_s * yy[:-1,:]
         trasnf_y_n = trasnf_prop_n * yy[1:,:]
         trasnf_y_e = trasnf_prop_e * yy[:,:-1]
         trasnf_y_w = trasnf_prop_w * yy[:,1:]
 
+        # Update saliency for all cells
         uu[:-1,:] += -trasnf_u_s + trasnf_u_n
         uu[1:,:]  += -trasnf_u_n + trasnf_u_s
         uu[:,:-1] += -trasnf_u_e + trasnf_u_w
         uu[:,1:]  += -trasnf_u_w + trasnf_u_e
 
+        # Update x-osity for all cells
         xx[:-1,:] += -trasnf_x_s + trasnf_x_n
         xx[1:,:]  += -trasnf_x_n + trasnf_x_s
         xx[:,:-1] += -trasnf_x_e + trasnf_x_w
         xx[:,1:]  += -trasnf_x_w + trasnf_x_e
 
+        # Update y-osity for all cells
         yy[:-1,:] += -trasnf_y_s + trasnf_y_n
         yy[1:,:]  += -trasnf_y_n + trasnf_y_s
         yy[:,:-1] += -trasnf_y_e + trasnf_y_w
         yy[:,1:]  += -trasnf_y_w + trasnf_y_e
 
+        # Increase time
         t += factor
 
     # Back to coordinates
     yy /= uu
     xx /= uu
 
+    # Resize saliency, x-osity/u and y-osity/u back to the original size
     uu = cv2.resize(uu, dsize=(u.shape[1],u.shape[0]), interpolation=cv2.INTER_CUBIC)
     yy = cv2.resize(yy, dsize=(u.shape[1],u.shape[0]), interpolation=cv2.INTER_CUBIC)
     xx = cv2.resize(xx, dsize=(u.shape[1],u.shape[0]), interpolation=cv2.INTER_CUBIC)
